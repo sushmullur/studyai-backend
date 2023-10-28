@@ -1,0 +1,6 @@
+.env
+.sh
+.DS_Store
+*.sh
+*.md
+*.zip
