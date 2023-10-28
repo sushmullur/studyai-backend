@@ -186,6 +186,15 @@ data = {
 # 1. Create the Notion page with the blocks
 response = requests.post(url, headers=headers, json=data)
 
-# Check the response to ensure the page with the child blocks was successfully created
-print(response.status_code)
-print(response.json())
+if response.status_code == 200:
+    page_id = response.json().get("id")
+
+    # 2. Make the Notion page public
+    public_url = f"https://www.notion.so/{page_id.replace('-', '')}"
+
+    print("Public URL:", public_url)
+    print(response.json())
+
+else:
+    print("Page creation failed with status code:", response.status_code)
+    print(response.json())
