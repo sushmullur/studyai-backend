@@ -2,7 +2,25 @@ import os
 import requests
 import json
 from youtube_transcript_api import YouTubeTranscriptApi
+from authlib.integrations.requests_client import OAuth2Session
+import requests
 
+def _get_jwt_token(auth_url: str, app_client_id: str, app_client_secret: str):
+    """Connect to the server and get a JWT token."""
+    token_endpoint = f"{auth_url}/oauth2/token"
+    session = OAuth2Session(
+        app_client_id, app_client_secret, scope="")
+    token = session.fetch_token(token_endpoint, grant_type="client_credentials")
+    return token["access_token"]
+
+def _get_delete_request_json(customer_id: int, corpus_id: int, doc_id: str):
+    """Returns json delete request."""
+    request = {}
+    request['customer_id'] = customer_id
+    request['corpus_id'] = corpus_id
+    request['document_id'] = doc_id
+
+    return json.dumps(request)
 
 def _get_index_request_json(customer_id: int, corpus_id: int, transcript: str):
     """ Returns some example data to index. """
@@ -48,6 +66,37 @@ def index_document(customer_id: int, corpus_id: int, idx_address: str, api_key: 
 
     if response.status_code != 200:
         print("REST upload failed with code %d, reason %s, text %s",
+                       response.status_code,
+                       response.reason,
+                       response.text)
+        return response, False
+    return response, True
+
+def delete_document(customer_id: int, corpus_id: int, idx_address: str, jwt_token: str, doc_id: str):
+    """Deletes document from the corpus.
+    Args:
+        customer_id: Unique customer ID in vectara platform.
+        corpus_id: ID of the corpus from which document willb e deleted.
+        idx_address: Address of the indexing server. e.g., api.vectara.io
+        jwt_token: A valid Auth token.
+        doc_id: Id of the document to be deleted.
+
+    Returns:
+        (response, True) in case of success and returns (response, False) in case of failure.
+    """
+
+    post_headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "customer-id": f"{customer_id}"
+    }
+    response = requests.post(
+        f"https://{idx_address}/v1/delete-doc",
+        data=_get_delete_request_json(customer_id, corpus_id, doc_id),
+        verify=True,
+        headers=post_headers)
+
+    if response.status_code != 200:
+        logging.error("REST delete document failed with code %d, reason %s, text %s",
                        response.status_code,
                        response.reason,
                        response.text)
@@ -124,10 +173,19 @@ def query(customer_id: int, corpus_id: int, query_address: str, api_key: str, qu
 
 def call_vectara(transcript):
     print("Transcript", transcript)
+
     query_address = "api.vectara.io"
     customer_id = 1354170844
     corpus_id = 5
     api_key = "zwt_ULcB3HdLImfP3GJ7jDwL7iMTbx0yaJoJ8LLzxg"
+    auth_url = "https://vectara-prod-1354170844.auth.us-west-2.amazoncognito.com/oauth2/token"
+    app_client_id = "7r2mq0c457jsn4t8tq6agpd5lb"
+    app_client_secret = "10205n0csja2j72k6oots5tq8cm5a21inea6hh04olrfe3ef3659"
+    document_id = "doc-id-2"
+
+    jwt_token = get_jwt_token(auth_url, app_client_id, app_client_secret)
+    delete_document(customer_id, corpus_id, query_address, jwt_token, document_id)
+
     index_document(customer_id, corpus_id, query_address, api_key, transcript)
     USER_QUERY = "Summarize everything you know about this and create a study guide out of it in the form of a rich text markdown file " + transcript
     response, success = query(customer_id, corpus_id, query_address, api_key, USER_QUERY)
