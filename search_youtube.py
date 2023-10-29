@@ -1,8 +1,11 @@
 import os
 import requests
 import json
+import psycopg2
 from youtube_transcript_api import YouTubeTranscriptApi
 
+def add_to_db():
+    conn = psycopg2.connect(os.environ["DATABASE_URL"])
 
 def _get_index_request_json(customer_id: int, corpus_id: int, transcript: str):
     """ Returns some example data to index. """
@@ -62,11 +65,10 @@ def format_subtitles(subtitle_data):
         text = subtitle['text']
         # Add the subtitle text
         formatted_transcript.append(text)
-        # Add a period (.) to separate subtitles
-        formatted_transcript.append('.')
     # Combine the formatted transcript into a single string
     full_transcript = ' '.join(formatted_transcript)
     
+    print(full_transcript)
     return full_transcript
 
 def _get_query_json(customer_id: int, corpus_id: int, query_value: str):
