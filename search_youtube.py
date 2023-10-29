@@ -1,23 +1,8 @@
 import os
 import requests
 import json
-from sqlalchemy import create_engine, text, insert
 from youtube_transcript_api import YouTubeTranscriptApi
 
-def add_to_db():
-    engine = create_engine(os.environ["DATABASE_URL"])
-    conn = engine.connect()
-
-    sql = text("INSERT INTO your_table_name (user_id, fileurl, query_text, time) VALUES (:user_id, :fileurl, :query_text, :time)")
-    view = text("SELECT * FROM your_table_name")
-
-    with engine.connect() as connection:
-        result = connection.execute(sql.bindparams(user_id="testing@gmail.com", fileurl="https://s3.amazonaws.com/README.md", query_text="query", time="1975-01-20 15:48:49"))
-        result_view = connection.execute(view)
-        for row in result_view:
-            print("username:", row.user_id)
-
-add_to_db()
 
 def _get_index_request_json(customer_id: int, corpus_id: int, transcript: str):
     """ Returns some example data to index. """
@@ -80,7 +65,6 @@ def format_subtitles(subtitle_data):
     # Combine the formatted transcript into a single string
     full_transcript = ' '.join(formatted_transcript)
     
-    print(full_transcript)
     return full_transcript
 
 def _get_query_json(customer_id: int, corpus_id: int, query_value: str):
@@ -139,7 +123,7 @@ def query(customer_id: int, corpus_id: int, query_address: str, api_key: str, qu
 
 
 def call_vectara(transcript):
-    print("Inside call vectara")
+    print("Transcript", transcript)
     query_address = "api.vectara.io"
     customer_id = 1354170844
     corpus_id = 5
@@ -197,7 +181,6 @@ def lambda_handler(event, context):
                     continue
                 full_transcript = format_subtitles(subtitles)
                 all_transcripts += full_transcript
-            print("Calling vectara")
             summary = call_vectara(all_transcripts)
             # Return the video data as a JSON response with CORS enabled for any origin
             return {
