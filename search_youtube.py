@@ -131,7 +131,8 @@ def _get_query_json(customer_id: int, corpus_id: int, query_value: str):
 
     summary = {}
     summary["responseLang"] = "en"
-    summary["maxSummarizedResults"] = 5
+    summary["maxSummarizedResults"] = 10
+    summary["summarizerPromptName"] = "vectara-summary-ext-v1.3.0"
     query_obj["summary"] = [ summary ]
 
     query["query"] = [ query_obj ]
