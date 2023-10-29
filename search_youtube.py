@@ -130,7 +130,7 @@ def call_vectara(transcript):
     corpus_id = 5
     api_key = "zwt_ULcB3HdLImfP3GJ7jDwL7iMTbx0yaJoJ8LLzxg"
     index_document(customer_id, corpus_id, query_address, api_key, transcript)
-    USER_QUERY = "Summarize everything you know about this and create a study guide out of it in the form of a rich text markdown file " + transcript
+    USER_QUERY = "Summarize everything you know about this and create a study guide out of it listing all important definitions, facts, and use cases. What are some things to focus on when studying this? Summarize all examples and topics related to it." + transcript
     response, success = query(customer_id, corpus_id, query_address, api_key, USER_QUERY)
     return response.text
 
