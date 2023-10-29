@@ -1,11 +1,23 @@
 import os
 import requests
 import json
-import psycopg2
+from sqlalchemy import create_engine, text, insert
 from youtube_transcript_api import YouTubeTranscriptApi
 
 def add_to_db():
-    conn = psycopg2.connect(os.environ["DATABASE_URL"])
+    engine = create_engine(os.environ["DATABASE_URL"])
+    conn = engine.connect()
+
+    sql = text("INSERT INTO your_table_name (user_id, fileurl, query_text, time) VALUES (:user_id, :fileurl, :query_text, :time)")
+    view = text("SELECT * FROM your_table_name")
+
+    with engine.connect() as connection:
+        result = connection.execute(sql.bindparams(user_id="testing@gmail.com", fileurl="https://s3.amazonaws.com/README.md", query_text="query", time="1975-01-20 15:48:49"))
+        result_view = connection.execute(view)
+        for row in result_view:
+            print("username:", row.user_id)
+
+add_to_db()
 
 def _get_index_request_json(customer_id: int, corpus_id: int, transcript: str):
     """ Returns some example data to index. """
